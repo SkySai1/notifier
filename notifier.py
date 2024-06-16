@@ -8,6 +8,7 @@ import dns.message
 import dns.query
 import dns.name
 import dns.rrset
+import datetime
 from netaddr import IPNetwork as CIDR, IPAddress as IP
 from multiprocessing import Process, cpu_count, Pipe, current_process, Manager
 from asyncio.selector_events import _SelectorSocketTransport as TCP
@@ -21,6 +22,8 @@ def tcp_sender(Q:dns.message.Message, ip):
 
 def handle(data:bytes, addr:tuple, transport, netmask):
     Q = dns.message.from_wire(data)
+    dt = datetime.datetime.now()
+    logging.info(f"{dt} {addr} {Q.id} {Q.question[0].name} {str(Q.opcode())}")
     if Q.question[0].name == dns.name.from_text('example.com.'):
         R = dns.message.make_response(Q)
         record = dns.rrset.from_text('example.com.', 60, 'IN', 'A', '127.0.0.1')
@@ -31,7 +34,6 @@ def handle(data:bytes, addr:tuple, transport, netmask):
     else:
         for ip in netmask:
             Thread(target=udp_sender,args=(Q,str(ip))).start()
-    print(Q.opcode())
     
 # --- UDP socket ---
 class UDPserver(asyncio.DatagramProtocol):
