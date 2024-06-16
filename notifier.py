@@ -9,6 +9,7 @@ import dns.query
 import dns.name
 import dns.rrset
 import datetime
+import socket
 from netaddr import IPNetwork as CIDR, IPAddress as IP
 from multiprocessing import Process, cpu_count, Pipe, current_process, Manager
 from asyncio.selector_events import _SelectorSocketTransport as TCP
@@ -29,11 +30,13 @@ def handle(data:bytes, addr:tuple, transport, netmask):
         R.answer.append(record)
         return R.to_wire()
     if isinstance(transport, TCP):
-        for ip in netmask:
-            Thread(target=tcp_sender,args=(Q,str(ip))).start()
+        return data
     else:
+        UDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for ip in netmask:
-            Thread(target=udp_sender,args=(Q,str(ip))).start()
+            addr = (str(ip), 53)
+            UDP.sendto(data, addr)
+        UDP.close()
     logging.info(f"{dt} ANSWER FROM: {addr} `{Q.id} {str(Q.opcode())} {Q.question[0].name}`  SEND TO: {netmask}")
 
     
