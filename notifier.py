@@ -23,17 +23,19 @@ def tcp_sender(Q:dns.message.Message, ip):
 def handle(data:bytes, addr:tuple, transport, netmask):
     Q = dns.message.from_wire(data)
     dt = datetime.datetime.now()
-    logging.info(f"{dt} {addr} {Q.id} {Q.question[0].name} {str(Q.opcode())}")
     if Q.question[0].name == dns.name.from_text('example.com.'):
         R = dns.message.make_response(Q)
         record = dns.rrset.from_text('example.com.', 60, 'IN', 'A', '127.0.0.1')
         R.answer.append(record)
         return R.to_wire()
     if isinstance(transport, TCP):
-        pass
+        for ip in netmask:
+            Thread(target=tcp_sender,args=(Q,str(ip))).start()
     else:
         for ip in netmask:
             Thread(target=udp_sender,args=(Q,str(ip))).start()
+    logging.info(f"{dt} ANSWER FROM: {addr} `{Q.id} {str(Q.opcode())} {Q.question[0].name}`  SEND TO: {netmask}")
+
     
 # --- UDP socket ---
 class UDPserver(asyncio.DatagramProtocol):
