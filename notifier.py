@@ -34,8 +34,8 @@ def handle(data:bytes, addr:tuple, transport, netmask):
     else:
         UDP = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         for ip in netmask:
-            addr = (str(ip), 53)
-            UDP.sendto(data, addr)
+            rcpt = (str(ip), 53)
+            UDP.sendto(data, rcpt)
         UDP.close()
     logging.info(f"{dt} ANSWER FROM: {addr} `{Q.id} {str(Q.opcode())} {Q.question[0].name}`  SEND TO: {netmask}")
 
