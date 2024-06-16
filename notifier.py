@@ -6,6 +6,7 @@ import os
 import logging
 import dns.message
 import dns.query
+import dns.name
 from netaddr import IPNetwork as CIDR, IPAddress as IP
 from multiprocessing import Process, cpu_count, Pipe, current_process, Manager
 from asyncio.selector_events import _SelectorSocketTransport as TCP
@@ -19,6 +20,10 @@ def tcp_sender(Q:dns.message.Message, ip):
 
 def handle(data:bytes, addr:tuple, transport, netmask):
     Q = dns.message.from_wire(data)
+    print(Q.question[0].name, type(Q.question[0].name))
+    if Q.question[0].name == dns.name.from_text('example.com.'):
+        answer = dns.message.make_response(Q)
+        return answer
     if isinstance(transport, TCP):
         pass
     else:
